@@ -1,0 +1,551 @@
+{
+  "openapi": "3.0.1",
+  "info": { "title": "STIS Server Service API", "description": "This API provides access to the server services at STIS, intended for authorized users only.", "version": "1.0" },
+  "servers": [{ "url": "http://localhost:8080", "description": "Generated server url" }],
+  "paths": {
+    "/api/users/profile": {
+      "get": {
+        "tags": ["User Controller"],
+        "summary": "Get user profile",
+        "description": "Retrieve profile information of the currently authenticated user.",
+        "operationId": "getProfile",
+        "responses": {
+          "401": { "description": "Unauthorized access", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Unauthorized" } } } } },
+          "200": { "description": "Profile retrieved successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetProfileResponse" } } } },
+          "404": { "description": "User not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengguna tidak ditemukan." } } } } }
+        }
+      },
+      "put": {
+        "tags": ["User Controller"],
+        "summary": "Update user profile",
+        "description": "Update profile information of the currently authenticated user.",
+        "operationId": "updateProfile",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "name": "Rehan", "email": "rehan@stis.ac.id", "password": "rehan" } } } }, "required": true },
+        "responses": {
+          "200": { "description": "Profile updated successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProfileResponse" } } } },
+          "401": { "description": "Unauthorized access", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Unauthorized" } } } } },
+          "404": { "description": "User not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengguna tidak ditemukan." } } } } }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": ["Auth Controller"],
+        "summary": "Register user",
+        "description": "Registers a new user with email validation and returns created user data.",
+        "operationId": "register",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "name": "Rehan", "email": "rehan@stis.ac.id", "password": "rehan" } } } }, "required": true },
+        "responses": {
+          "201": { "description": "Registration successful", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterResponse" } } } },
+          "400": {
+            "description": "Failed registration",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Gagal melakukan registrasi: Email sudah terdaftar. Gunakan email lain." } } } }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["Auth Controller"],
+        "summary": "Login user",
+        "description": "Authenticates user and returns JWT token upon successful login.",
+        "operationId": "login",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "email": "rehan@stis.ac.id", "password": "rehan" } } } }, "required": true },
+        "responses": {
+          "400": { "description": "Bad credentials", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Email atau password salah." } } } } },
+          "200": { "description": "Login successful, returns access token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } }
+        }
+      }
+    },
+    "/api/server/request": {
+      "post": {
+        "tags": ["Server Controller"],
+        "summary": "Request server access",
+        "description": "Request access to a server. Only students can access this endpoint.",
+        "operationId": "requestServerAccess",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "purpose": "Hosting project" } } } }, "required": true },
+        "responses": {
+          "201": {
+            "description": "Server access request submitted successfully",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Permintaan akses server berhasil diajukan." } } } }
+          },
+          "403": { "description": "Forbidden for non-student users", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/admin/add": {
+      "post": {
+        "tags": ["Admin Controller"],
+        "summary": "Add a new administrator",
+        "description": "Create a new administrator account.",
+        "operationId": "addAdministrator",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "name": "Rehan", "email": "rehan@stis.ac.id", "password": "rehan" } } } }, "required": true },
+        "responses": {
+          "201": { "description": "Administrator successfully created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddAdministratorResponse" } } } },
+          "400": {
+            "description": "Failed registration",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Gagal menambahkan administrator: Email sudah terdaftar. Gunakan email lain." } } } }
+          },
+          "403": { "description": "Only administrators can access this request", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/users/update-password": {
+      "patch": {
+        "tags": ["User Controller"],
+        "summary": "Update password",
+        "description": "Update password of the currently authenticated user.",
+        "operationId": "updatePassword",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "newPassword": "Admin123" } } } }, "required": true },
+        "responses": {
+          "400": { "description": "Password cannot be empty", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Password baru tidak boleh kosong." } } } } },
+          "401": { "description": "Unauthorized access", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Unauthorized" } } } } },
+          "200": { "description": "Password updated successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Password berhasil diperbarui." } } } } }
+        }
+      }
+    },
+    "/api/users/update-email": {
+      "patch": {
+        "tags": ["User Controller"],
+        "summary": "Update email",
+        "description": "Update email address of the currently authenticated user.",
+        "operationId": "updateEmail",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "newEmail": "rehan@stis.ac.id" } } } }, "required": true },
+        "responses": {
+          "401": { "description": "Unauthorized access", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Unauthorized" } } } } },
+          "400": { "description": "Failure update email", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Gagal memperbarui email." } } } } },
+          "200": { "description": "Email updated successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Email berhasil diperbarui." } } } } }
+        }
+      }
+    },
+    "/api/users/change-role/{userId}": {
+      "patch": {
+        "tags": ["User Controller"],
+        "summary": "Change user role",
+        "description": "Change the role of a user. Only accessible by administrators.",
+        "operationId": "changeUserRole",
+        "parameters": [{ "name": "userId", "in": "path", "description": "The ID of the user whose role will be changed", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "newRole": "ADMINISTRATOR" } } } }, "required": true },
+        "responses": {
+          "403": { "description": "Forbidden to change own role", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Admin tidak bisa mengubah role dirinya sendiri." } } } } },
+          "400": { "description": "Invalid role", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Role tidak valid. Pastikan role yang diberikan benar." } } } } },
+          "200": { "description": "Role updated successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Role berhasil diubah." } } } } },
+          "404": { "description": "User not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengguna tidak ditemukan." } } } } }
+        }
+      }
+    },
+    "/api/server/request/{id}": {
+      "get": {
+        "tags": ["Server Controller"],
+        "summary": "Get server request details",
+        "description": "Retrieve detailed information about a specific server request by its ID.",
+        "operationId": "getServerRequestDetail",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "403": {
+            "description": "Only authorized users have permission to access this request detail.",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Anda tidak memiliki izin untuk mengakses detail pengajuan ini." } } } }
+          },
+          "404": { "description": "Server request not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server tidak ditemukan." } } } } },
+          "200": { "description": "Server request details retrieved successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetOneServerResponse" } } } }
+        }
+      },
+      "patch": {
+        "tags": ["Server Controller"],
+        "summary": "Update server request",
+        "description": "Update an existing server request's purpose. Only the owner can update their request if it is still pending.",
+        "operationId": "updateServerRequest",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "string", "example": { "purpose": "apaya" } } } }, "required": true },
+        "responses": {
+          "400": {
+            "description": "Request can only be updated if it is still pending",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server hanya bisa diedit selama statusnya masih pending." } } } }
+          },
+          "404": { "description": "Server request not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server tidak ditemukan." } } } } },
+          "200": { "description": "Server request updated successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Pengajuan server berhasil diperbarui." } } } } },
+          "403": {
+            "description": "Forbidden for non-owner users",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Anda tidak memiliki izin untuk memperbarui pengajuan server ini." } } } }
+          }
+        }
+      }
+    },
+    "/api/server/request/{id}/reject": {
+      "patch": {
+        "tags": ["Server Controller"],
+        "summary": "Reject server request",
+        "description": "Reject a server access request with an optional reason. Only administrators can reject requests.",
+        "operationId": "rejectServerRequest",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "404": { "description": "Server request not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server tidak ditemukan." } } } } },
+          "200": { "description": "Server request rejected successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Pengajuan server berhasil ditolak." } } } } },
+          "400": {
+            "description": "Request already approved",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server telah disetujui sebelumnya, tidak dapat diubah." } } } }
+          }
+        }
+      }
+    },
+    "/api/server/request/{id}/approve": {
+      "patch": {
+        "tags": ["Server Controller"],
+        "summary": "Approve server request",
+        "description": "Approve a server access request. Only administrators can approve requests.",
+        "operationId": "approveServerRequest",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "404": { "description": "Server request not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server tidak ditemukan." } } } } },
+          "200": { "description": "Server request approved successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApprovalServerResponse" } } } },
+          "400": { "description": "Request already approved", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengajuan server sudah disetujui sebelumnya." } } } } }
+        }
+      }
+    },
+    "/api/server/release/{id}": {
+      "patch": {
+        "tags": ["Server Controller"],
+        "summary": "Release server",
+        "description": "Release a server back to the pool. Only the owner can release their server.",
+        "operationId": "releaseServer",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "404": { "description": "Server not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Server tidak ditemukan." } } } } },
+          "200": { "description": "Server released successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Server berhasil dilepaskan." } } } } }
+        }
+      }
+    },
+    "/api/server/requests": {
+      "get": {
+        "tags": ["Server Controller"],
+        "summary": "Get all server requests with optional status filter",
+        "description": "Retrieve all server requests with pagination, sorting, and an optional filter by status. Only administrators can access this endpoint.",
+        "operationId": "getServerRequests",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 0 } },
+          { "name": "size", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 10 } },
+          { "name": "sortBy", "in": "query", "required": false, "schema": { "type": "string", "default": "id" } },
+          { "name": "direction", "in": "query", "required": false, "schema": { "type": "string", "default": "asc" } },
+          { "name": "status", "in": "query", "description": "Filter by server request status, this parameter is optional.", "required": false, "schema": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "RELEASED"] } }
+        ],
+        "responses": {
+          "400": { "description": "Invalid status filter provided", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Filter status tidak valid." } } } } },
+          "200": { "description": "List of server requests retrieved successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetServersResponse" } } } }
+        }
+      }
+    },
+    "/api/server/my-requests": {
+      "get": {
+        "tags": ["Server Controller"],
+        "summary": "Get user's server requests with optional status filter",
+        "description": "Retrieve own server requests with pagination, sorting, and an optional filter by status",
+        "operationId": "getMyServerRequests",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 0 } },
+          { "name": "size", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 10 } },
+          { "name": "sortBy", "in": "query", "required": false, "schema": { "type": "string", "default": "id" } },
+          { "name": "direction", "in": "query", "required": false, "schema": { "type": "string", "default": "asc" } },
+          { "name": "status", "in": "query", "description": "Filter by server request status, this parameter is optional.", "required": false, "schema": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "RELEASED"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of user's server requests retrieved successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetMyServersResponse" } } } },
+          "400": { "description": "Invalid status filter provided", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Filter status tidak valid." } } } } },
+          "403": { "description": "Forbidden for non-student users", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/admin/list-user": {
+      "get": {
+        "tags": ["Admin Controller"],
+        "summary": "Get a list of users",
+        "description": "Retrieve a paginated list of all users, with optional sorting.",
+        "operationId": "getUsers",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 0 } },
+          { "name": "size", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 10 } },
+          { "name": "sortBy", "in": "query", "required": false, "schema": { "type": "string", "default": "id" } },
+          { "name": "direction", "in": "query", "required": false, "schema": { "type": "string", "default": "asc" } }
+        ],
+        "responses": {
+          "200": { "description": "Successfully retrieved list of users", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ListUsersResponse" } } } },
+          "403": { "description": "Only administrators can access this request", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/admin/list-mahasiswa": {
+      "get": {
+        "tags": ["Admin Controller"],
+        "summary": "Get a list of students",
+        "description": "Retrieve a paginated list of users with role MAHASISWA.",
+        "operationId": "getStudents",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 0 } },
+          { "name": "size", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 10 } },
+          { "name": "sortBy", "in": "query", "required": false, "schema": { "type": "string", "default": "id" } },
+          { "name": "direction", "in": "query", "required": false, "schema": { "type": "string", "default": "asc" } }
+        ],
+        "responses": {
+          "200": { "description": "Successfully retrieved list of students", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ListUsersResponse" } } } },
+          "403": { "description": "Only administrators can access this request", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/admin/list-administrator": {
+      "get": {
+        "tags": ["Admin Controller"],
+        "summary": "Get a list of administrators",
+        "description": "Retrieve a paginated list of users with role ADMINISTRATOR.",
+        "operationId": "getAdministrators",
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 0 } },
+          { "name": "size", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 10 } },
+          { "name": "sortBy", "in": "query", "required": false, "schema": { "type": "string", "default": "id" } },
+          { "name": "direction", "in": "query", "required": false, "schema": { "type": "string", "default": "asc" } }
+        ],
+        "responses": {
+          "200": { "description": "Successfully retrieved list of administrators", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ListAdministratorsResponse" } } } },
+          "403": { "description": "Only administrators can access this request", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Kamu tidak memiliki akses." } } } } }
+        }
+      }
+    },
+    "/api/users/delete-account": {
+      "delete": {
+        "tags": ["User Controller"],
+        "summary": "Delete account",
+        "description": "Delete the account of the currently authenticated user.",
+        "operationId": "deleteOwnAccount",
+        "responses": {
+          "200": { "description": "Account deleted successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Akun berhasil dihapus." } } } } },
+          "401": { "description": "Unauthorized access", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Unauthorized" } } } } },
+          "404": { "description": "User not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengguna tidak ditemukan." } } } } }
+        }
+      }
+    },
+    "/api/server/terminate/{id}": {
+      "delete": {
+        "tags": ["Server Controller"],
+        "summary": "Terminate server",
+        "description": "Terminate a server that has been released. Only administrators can terminate a server.",
+        "operationId": "terminateServer",
+        "parameters": [{ "name": "id", "in": "path", "description": "The unique ID of the server request", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "200": { "description": "Server terminated successfully", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Server berhasil dinonaktifkan." } } } } },
+          "404": { "description": "Server not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Server tidak ditemukan." } } } } },
+          "400": {
+            "description": "Server can only be terminated if status is 'RELEASED'",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Server hanya dapat dinonaktifkan/dihapus jika statusnya 'RELEASED'." } } } }
+          }
+        }
+      }
+    },
+    "/api/admin/delete-user": {
+      "delete": {
+        "tags": ["Admin Controller"],
+        "summary": "Delete a user by email",
+        "description": "Delete a user account by specifying the email. Admin cannot delete their own account.",
+        "operationId": "deleteUserByAdmin",
+        "parameters": [{ "name": "email", "in": "query", "description": "The email address of the user to delete", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "403": {
+            "description": "Admin tried to delete their own account",
+            "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Tidak diperbolehkan menghapus akun Anda sendiri." } } } }
+          },
+          "200": { "description": "Account successfully deleted", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "success", "message": "Akun berhasil dihapus." } } } } },
+          "404": { "description": "User not found", "content": { "application/json": { "schema": { "type": "string", "example": { "status": "error", "message": "Pengguna tidak ditemukan." } } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Server": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "owner": { "$ref": "#/components/schemas/User" },
+          "purpose": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "RELEASED"] },
+          "reason": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "serverAccount": { "$ref": "#/components/schemas/ServerAccount" }
+        }
+      },
+      "ServerAccount": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "owner": { "$ref": "#/components/schemas/User" },
+          "server": { "$ref": "#/components/schemas/Server" },
+          "username": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "example": { "username": "rehan", "password": "0531b3b6" }
+      },
+      "User": {
+        "required": ["email", "name", "password"],
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "role": { "type": "string", "enum": ["ADMINISTRATOR", "MAHASISWA"] },
+          "servers": { "type": "array", "items": { "$ref": "#/components/schemas/Server" } },
+          "serverAccounts": { "type": "array", "items": { "$ref": "#/components/schemas/ServerAccount" } }
+        }
+      },
+      "GrantedAuthority": { "type": "object", "properties": { "authority": { "type": "string" } }, "example": [{ "authority": "ROLE_MAHASISWA" }] },
+      "MahasiswaDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "name": { "type": "string", "example": "Rehan" },
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "password": { "type": "string", "example": "$2a$10$.46RUm/kWmgL0kBIBknPAuceDY0wEi1jyjeGVu9nvGZZxSWSGUda6" },
+          "role": { "type": "string", "example": "MAHASISWA", "enum": ["ADMINISTRATOR", "MAHASISWA"] },
+          "authorities": { "type": "array", "example": [{ "authority": "ROLE_MAHASISWA" }], "items": { "$ref": "#/components/schemas/GrantedAuthority" } },
+          "enabled": { "type": "boolean" },
+          "username": { "type": "string" },
+          "accountNonLocked": { "type": "boolean" },
+          "accountNonExpired": { "type": "boolean" },
+          "credentialsNonExpired": { "type": "boolean" }
+        }
+      },
+      "UpdateProfileResponse": {
+        "type": "object",
+        "properties": { "status": { "type": "string", "default": "success" }, "message": { "type": "string", "default": "Profil berhasil diperbarui." }, "data": { "$ref": "#/components/schemas/MahasiswaDto" } }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": { "status": { "type": "string", "default": "success" }, "message": { "type": "string", "default": "Registrasi berhasil dilakukan." }, "data": { "$ref": "#/components/schemas/MahasiswaDto" } }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJleGFtcGxlQHN0aXMuYWMuaWQiLCJyb2xlIjoiTUFIQVNJU1dBIiwiaXNzIjoiUG9sc3RhdCIsImlhdCI6MTczMTUxNTQ5OCwiZXhwIjoxNzMxNjAxODk4fQ.X5SctKzDMVjQ5quFUvSsPdtIcCtLb3MCzr2nPRrvt3egkwNkNRXr6WjR6OmWpoUh0avFZpmOtfXhOs73KKaqWQ"
+          }
+        }
+      },
+      "AddAdministratorResponse": {
+        "type": "object",
+        "properties": { "status": { "type": "string", "default": "success" }, "message": { "type": "string", "default": "Administrator berhasil ditambahkan." }, "data": { "$ref": "#/components/schemas/AdministratorDto" } }
+      },
+      "AdministratorDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "name": { "type": "string", "example": "Rehan" },
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "password": { "type": "string", "example": "$2a$10$.46RUm/kWmgL0kBIBknPAuceDY0wEi1jyjeGVu9nvGZZxSWSGUda6" },
+          "role": { "type": "string", "example": "ADMINISTRATOR", "enum": ["ADMINISTRATOR", "MAHASISWA"] },
+          "authorities": { "type": "array", "example": [{ "authority": "ROLE_ADMINISTRATOR" }], "items": { "$ref": "#/components/schemas/GrantedAuthority" } },
+          "enabled": { "type": "boolean" },
+          "username": { "type": "string" },
+          "accountNonLocked": { "type": "boolean" },
+          "accountNonExpired": { "type": "boolean" },
+          "credentialsNonExpired": { "type": "boolean" }
+        }
+      },
+      "ApprovalServerResponse": {
+        "type": "object",
+        "properties": { "status": { "type": "string", "default": "success" }, "message": { "type": "string", "default": "Pengajuan server berhasil disetujui." }, "account": { "$ref": "#/components/schemas/ServerAccount" } }
+      },
+      "GetProfileResponse": { "type": "object", "properties": { "status": { "type": "string", "default": "success" }, "data": { "$ref": "#/components/schemas/MahasiswaDto" } } },
+      "GetServersDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "purpose": { "type": "string", "example": "Hosting project" },
+          "status": { "type": "string", "example": "PENDING" },
+          "owner": { "$ref": "#/components/schemas/UserDto" }
+        }
+      },
+      "GetServersResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "default": "success" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/GetServersDto" } },
+          "totalPages": { "type": "integer", "format": "int32", "example": 1 },
+          "page": { "type": "integer", "format": "int32", "example": 0 },
+          "totalElements": { "type": "integer", "format": "int64", "example": 1 }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "name": { "type": "string", "example": "Rehan" },
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "password": { "type": "string", "example": "$2a$10$.46RUm/kWmgL0kBIBknPAuceDY0wEi1jyjeGVu9nvGZZxSWSGUda6" },
+          "role": { "type": "string", "example": "MAHASISWA", "enum": ["ADMINISTRATOR", "MAHASISWA"] },
+          "authorities": { "type": "array", "example": [{ "authority": "ROLE_MAHASISWA" }], "items": { "$ref": "#/components/schemas/GrantedAuthority" } },
+          "enabled": { "type": "boolean" },
+          "username": { "type": "string" },
+          "accountNonLocked": { "type": "boolean" },
+          "accountNonExpired": { "type": "boolean" },
+          "credentialsNonExpired": { "type": "boolean" }
+        },
+        "example": { "id": 1, "name": "Rehan", "email": "rehan@stis.ac.id" }
+      },
+      "GetOneServerResponse": { "type": "object", "properties": { "status": { "type": "string", "default": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/GetServersDto" } } } },
+      "GetMyServersDto": {
+        "type": "object",
+        "properties": { "id": { "type": "integer", "format": "int64", "example": 1 }, "purpose": { "type": "string", "example": "Hosting project" }, "status": { "type": "string", "example": "PENDING" } }
+      },
+      "GetMyServersResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "default": "success" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/GetMyServersDto" } },
+          "totalPages": { "type": "integer", "format": "int32", "example": 1 },
+          "page": { "type": "integer", "format": "int32", "example": 0 },
+          "totalElements": { "type": "integer", "format": "int64", "example": 1 }
+        }
+      },
+      "ListUsersDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "name": { "type": "string", "example": "Rehan" },
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "role": { "type": "string", "example": "MAHASISWA", "enum": ["ADMINISTRATOR", "MAHASISWA"] },
+          "serverAccounts": { "$ref": "#/components/schemas/ServerAccountDto" }
+        }
+      },
+      "ListUsersResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "default": "success" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ListUsersDto" } },
+          "totalPages": { "type": "integer", "format": "int32", "example": 1 },
+          "page": { "type": "integer", "format": "int32", "example": 0 },
+          "totalElements": { "type": "integer", "format": "int64", "example": 1 }
+        }
+      },
+      "ServerAccountDto": { "type": "object", "properties": { "id": { "type": "integer", "format": "int64", "example": 1 }, "username": { "type": "string", "example": "rehan" }, "password": { "type": "string", "example": "0531b3b6" } } },
+      "ListAdministratorsDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "name": { "type": "string", "example": "Rehan" },
+          "email": { "type": "string", "example": "rehan@stis.ac.id" },
+          "role": { "type": "string", "example": "ADMINISTRATOR", "enum": ["ADMINISTRATOR", "MAHASISWA"] }
+        }
+      },
+      "ListAdministratorsResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "default": "success" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ListAdministratorsDto" } },
+          "totalPages": { "type": "integer", "format": "int32", "example": 1 },
+          "page": { "type": "integer", "format": "int32", "example": 0 },
+          "totalElements": { "type": "integer", "format": "int64", "example": 1 }
+        }
+      }
+    }
+  }
+}
